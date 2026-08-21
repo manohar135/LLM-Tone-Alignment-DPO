@@ -1,0 +1,15 @@
+# Tone Aligner — Dependencies
+# -------------------------------------------------
+# Install PyTorch FIRST with your CUDA version:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# Then install these:
+# -------------------------------------------------
+transformers>=4.44.0
+datasets>=2.20.0
+trl>=0.12.0
+peft>=0.13.0
+bitsandbytes>=0.44.0
+accelerate>=1.0.0
+gradio>=4.0.0
+scipy>=1.10.0
+sentencepiece>=0.2.0
