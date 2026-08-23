@@ -1,18 +1,4 @@
-"""
-Tone Aligner — Gradio Demo
-
-Interactive side-by-side comparison of the base model vs. the DPO-aligned model.
-Users can enter any prompt and see how alignment changes the model's response.
-
-Features:
-  - Toggle between base and aligned model (single model, adapter on/off)
-  - Real-time toxicity scoring for both responses
-  - Preset example prompts
-  - Adjustable generation parameters
-
-Usage:
-    python app.py
-"""
+"""Gradio demo for side-by-side comparison of base vs. DPO-aligned model."""
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
@@ -25,15 +11,13 @@ from config import (
     MAX_NEW_TOKENS, TEMPERATURE, TOP_P, REPETITION_PENALTY,
 )
 
-
-# ── Global model references (loaded once at startup) ──────────
 MODEL = None
 TOKENIZER = None
 TOXICITY_PIPE = None
 
 
 def load_models():
-    """Load the generation model with LoRA adapter + toxicity classifier."""
+    """Load the generation model with LoRA adapter and the toxicity classifier."""
     global MODEL, TOKENIZER, TOXICITY_PIPE
 
     print("Loading generation model...")
@@ -56,20 +40,14 @@ def load_models():
     if TOKENIZER.pad_token is None:
         TOKENIZER.pad_token = TOKENIZER.eos_token
 
-    # Load LoRA adapter
     print(f"Loading LoRA adapter from: {OUTPUT_DIR}")
     MODEL = PeftModel.from_pretrained(base_model, OUTPUT_DIR)
     MODEL.eval()
 
-    # Load toxicity classifier on CPU
     print(f"Loading toxicity classifier: {TOXICITY_MODEL_ID}")
-    TOXICITY_PIPE = pipeline(
-        "text-classification",
-        model=TOXICITY_MODEL_ID,
-        device="cpu",
-    )
+    TOXICITY_PIPE = pipeline("text-classification", model=TOXICITY_MODEL_ID, device="cpu")
 
-    print("All models loaded successfully!")
+    print("All models loaded.")
 
 
 def generate_response(prompt_text, temperature, max_tokens, use_adapter=True):
@@ -80,9 +58,7 @@ def generate_response(prompt_text, temperature, max_tokens, use_adapter=True):
         MODEL.disable_adapter_layers()
 
     messages = [{"role": "user", "content": prompt_text}]
-    input_text = TOKENIZER.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True,
-    )
+    input_text = TOKENIZER.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = TOKENIZER(input_text, return_tensors="pt").to(MODEL.device)
 
     with torch.no_grad():
@@ -97,12 +73,11 @@ def generate_response(prompt_text, temperature, max_tokens, use_adapter=True):
         )
 
     generated_ids = output_ids[0][inputs["input_ids"].shape[1]:]
-    response = TOKENIZER.decode(generated_ids, skip_special_tokens=True)
-    return response.strip()
+    return TOKENIZER.decode(generated_ids, skip_special_tokens=True).strip()
 
 
 def get_toxicity(text):
-    """Get toxicity score (0-1) for a text."""
+    """Return toxicity score (0-1) for the given text."""
     if not text.strip():
         return 0.0
     result = TOXICITY_PIPE(text, truncation=True, max_length=512)[0]
@@ -112,40 +87,34 @@ def get_toxicity(text):
 
 
 def compare_responses(prompt, temperature, max_tokens):
-    """Generate both base and aligned responses, score toxicity."""
+    """Generate base and aligned responses, then score toxicity."""
     if not prompt.strip():
         return "", "", "", ""
 
-    # Generate base model response (adapter OFF)
     base_response = generate_response(prompt, temperature, max_tokens, use_adapter=False)
     base_toxicity = get_toxicity(base_response)
 
-    # Generate aligned model response (adapter ON)
     aligned_response = generate_response(prompt, temperature, max_tokens, use_adapter=True)
     aligned_toxicity = get_toxicity(aligned_response)
 
-    base_score = f"Toxicity Score: {base_toxicity:.4f}"
-    aligned_score = f"Toxicity Score: {aligned_toxicity:.4f}"
-
-    return base_response, base_score, aligned_response, aligned_score
+    return (
+        base_response,
+        f"Toxicity: {base_toxicity:.4f}",
+        aligned_response,
+        f"Toxicity: {aligned_toxicity:.4f}",
+    )
 
 
 def build_ui():
     """Build the Gradio interface."""
-    with gr.Blocks(
-        title="Tone Aligner — DPO Alignment Demo",
-        theme=gr.themes.Soft(),
-    ) as demo:
+    with gr.Blocks(title="Tone Aligner — DPO Demo", theme=gr.themes.Soft()) as demo:
         gr.Markdown(
             """
             # 🎯 Tone Aligner — DPO Alignment Demo
 
             Compare how the **base model** and the **DPO-aligned model** respond to the same prompt.
-            The aligned model was trained using Direct Preference Optimization to prefer polite,
-            helpful, and safe responses over toxic or harmful ones.
-
-            **How it works:** Both responses come from the *same model* — the only difference is
-            whether the LoRA adapter (trained with DPO) is active or not.
+            Both responses come from the *same model* — the only difference is whether the
+            LoRA adapter (trained with DPO) is active or not.
             """
         )
 
@@ -158,14 +127,8 @@ def build_ui():
             )
 
         with gr.Row():
-            temperature = gr.Slider(
-                0.1, 1.5, value=0.7, step=0.1,
-                label="Temperature (higher = more creative)",
-            )
-            max_tokens = gr.Slider(
-                64, 512, value=256, step=32,
-                label="Max Tokens",
-            )
+            temperature = gr.Slider(0.1, 1.5, value=0.7, step=0.1, label="Temperature")
+            max_tokens = gr.Slider(64, 512, value=256, step=32, label="Max Tokens")
 
         generate_btn = gr.Button("🔄 Generate & Compare", variant="primary", size="lg")
 
@@ -199,11 +162,9 @@ def build_ui():
         )
 
         gr.Markdown(
-            """
-            ---
-            **Model:** Qwen2.5-0.5B-Instruct + LoRA (DPO-trained on Anthropic HH-RLHF)
-            | **Toxicity Scorer:** s-nlp/roberta_toxicity_classifier
-            """
+            "---\n"
+            "**Model:** Qwen2.5-1.5B-Instruct + LoRA (DPO on Anthropic HH-RLHF) "
+            "| **Toxicity Scorer:** s-nlp/roberta_toxicity_classifier"
         )
 
     return demo
@@ -212,4 +173,4 @@ def build_ui():
 if __name__ == "__main__":
     load_models()
     demo = build_ui()
-    demo.launch(share=False)  # Set share=True for a public link
+    demo.launch(share=False)
