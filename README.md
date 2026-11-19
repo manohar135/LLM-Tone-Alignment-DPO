@@ -1,6 +1,6 @@
 # LLM Tone & Safety Alignment with Direct Preference Optimization (DPO)
 
-Aligning an SFT-only 7B model (`HuggingFaceH4/zephyr-7b-sft-full`) to be **safer, more polite, and more helpful** using **DPO + 4-bit QLoRA** on a **single NVIDIA L4 GPU (22.5 GB)** — without introducing over-refusal.
+Aligning an SFT-only 7B model (`alignment-handbook/zephyr-7b-sft-full`) to be **safer, more polite, and more helpful** using **DPO + 4-bit QLoRA** on a **single NVIDIA L4 GPU (22.5 GB)** — without introducing over-refusal.
 
 **Stack:** Zephyr-7B-SFT (Mistral-7B) · 4-bit QLoRA (PEFT) · DPO (TRL) · PKU-SafeRLHF + UltraFeedback · OpenAssistant Reward Model + RoBERTa Toxicity · Gradio
 
@@ -8,7 +8,7 @@ Aligning an SFT-only 7B model (`HuggingFaceH4/zephyr-7b-sft-full`) to be **safer
 
 ## Why This Design Works (Key Interview Talking Points)
 
-1. **SFT-only Base Model (`Pretrain → SFT → DPO`):** Starting from `HuggingFaceH4/zephyr-7b-sft-full` (instruction-tuned, but **not yet DPO/RLHF aligned**) isolates the true effect of DPO instead of stacking DPO onto an already-aligned model.
+1. **SFT-only Base Model (`Pretrain → SFT → DPO`):** Starting from `alignment-handbook/zephyr-7b-sft-full` (instruction-tuned, but **not yet DPO/RLHF aligned**) isolates the true effect of DPO instead of stacking DPO onto an already-aligned model.
 2. **Single-GPU 4-bit QLoRA + Implicit Reference Model:** Quantizing the 7B base weights to 4-bit NF4 and attaching LoRA adapters (`r=16`, `alpha=32`) to all attention and MLP layers trains only **~0.6%** of parameters on a single 22.5 GB L4 GPU. Passing `ref_model=None` with PEFT lets `DPOTrainer` compute reference log-probs by temporarily disabling the LoRA adapter — no second 7B reference model in VRAM.
 3. **Balanced Preference Data (No Over-Refusal):** Training only on safety refusal pairs causes *alignment tax* (refusing benign questions). Mixing **50% `PKU-SafeRLHF`** (safety contrast + safe-helpful pairs) with **50% `UltraFeedback`** (tone, clarity, helpfulness) keeps the model safe *and* helpful.
 4. **3-Dimensional Evaluation (No Sampling Noise):** Base vs. Aligned responses are generated from the exact same loaded weights using `with model.disable_adapter():` and deterministic greedy decoding, then scored on:

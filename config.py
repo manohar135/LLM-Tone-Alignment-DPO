@@ -3,7 +3,7 @@
 # Base model: SFT-only checkpoint (knows chat format, NOT yet DPO/RLHF aligned)
 # Using an SFT-only model follows the real industry pipeline (Pretrain -> SFT -> DPO)
 # and yields clear, measurable before-vs-after alignment gains.
-MODEL_ID = "HuggingFaceH4/zephyr-7b-sft-full"
+MODEL_ID = "alignment-handbook/zephyr-7b-sft-full"
 
 # Balanced Preference Datasets (50% Safety + 50% Tone & Helpfulness)
 PKU_DATASET_ID = "PKU-Alignment/PKU-SafeRLHF"
