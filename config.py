@@ -10,9 +10,10 @@ PKU_DATASET_ID = "PKU-Alignment/PKU-SafeRLHF"
 UF_DATASET_ID = "argilla/ultrafeedback-binarized-preferences-cleaned"
 PKU_RATIO = 0.5
 
-# Full run (~1.5-2 hrs on 1x L4 GPU, ~3-4 CCUs)
-NUM_TRAIN_SAMPLES = 8000
-NUM_EVAL_SAMPLES = 400
+# Full run (~1.8-2 hrs on 1x L4 GPU, ~3.8 CCUs | ~40 min on 1x A100)
+# 4,800 / 32 eff_batch = 150 steps (1 full epoch)
+NUM_TRAIN_SAMPLES = 4800
+NUM_EVAL_SAMPLES = 300
 
 # Fast sanity run (~15-20 min on 1x L4 GPU, ~0.6 CCU) via `--sanity`
 SANITY_TRAIN_SAMPLES = 1600
@@ -41,8 +42,8 @@ GRADIENT_ACCUMULATION_STEPS = 16
 NUM_EPOCHS = 1.0
 WARMUP_RATIO = 0.1
 WEIGHT_DECAY = 0.01
-MAX_LENGTH = 1024
-MAX_PROMPT_LENGTH = 512
+MAX_LENGTH = 768
+MAX_PROMPT_LENGTH = 384
 
 LOGGING_STEPS = 10
 EVAL_STEPS = 50

@@ -23,7 +23,7 @@ Aligning an SFT-only 7B model (`alignment-handbook/zephyr-7b-sft-full`) to be **
 | Run Type | Command Flag | Samples (Train / Eval) | Est. Time (1× L4) | Est. Cost |
 |---|---|---|---|---|
 | Sanity Check *(run first)* | `--sanity` | 1,600 / 200 | ~15–20 min | ~0.6 CCU |
-| Full Training Run | *(default)* | 8,000 / 400 | ~1.5–2 hrs | ~3.5 CCUs |
+| Full Training Run | *(default)* | 4,800 / 300 | ~1.8–2 hrs | ~3.8 CCUs |
 | Evaluation (100 prompts) | *(default)* | 60 curated + 40 PKU test | ~10–15 min | ~0.4 CCU |
 
 ---
