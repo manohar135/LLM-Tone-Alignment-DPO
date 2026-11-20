@@ -9,10 +9,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Training & evaluation outputs (model adapters, datasets, cache)
+# Training & evaluation outputs (model adapters, datasets, cache, archives)
 outputs/
 dpo_adapter/
 dataset/
+*.zip
 *.json
 !package.json
 
